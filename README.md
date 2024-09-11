@@ -12,7 +12,6 @@
     <a href="https://packagist.org/packages/evo-mark/evo-laravel-service-facades"><img src="https://img.shields.io/packagist/v/evo-mark/evo-laravel-service-facades?logo=packagist&logoColor=white" alt="Build status" /></a>
     <a href="https://packagist.org/packages/evo-mark/evo-laravel-service-facades"><img src="https://img.shields.io/packagist/dt/evo-mark/evo-laravel-service-facades" alt="Total Downloads"></a>
     <a href="https://packagist.org/packages/evo-mark/evo-laravel-service-facadess"><img src="https://img.shields.io/packagist/l/evo-mark/evo-laravel-service-facades" alt="License"></a>
-    <img src="https://github.com/evo-mark/evo-laravel-service-facades/actions/workflows/build.yml/badge.svg?branch=main">
 </p>
 
 # Evo Laravel Service Facades
