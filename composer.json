@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Support package for easily using the service/facade pattern",
     "type": "package",
-    "license": "GNU GPLv3",
+    "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "Craig Riley",
