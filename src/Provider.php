@@ -3,7 +3,9 @@
 namespace EvoMark\EvoLaravelServiceFacades;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Symfony\Component\Finder\Finder;
+use Illuminate\Support\Facades\Cache;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Contracts\Foundation\Application;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -20,7 +22,7 @@ class Provider extends PackageServiceProvider
                 \EvoMark\EvoLaravelServiceFacades\Commands\MakeServiceCommand::class,
                 \EvoMark\EvoLaravelServiceFacades\Commands\MakeFacadeCommand::class,
                 \EvoMark\EvoLaravelServiceFacades\Commands\AnnotateFacadesCommand::class,
-
+                \EvoMark\EvoLaravelServiceFacades\Commands\ClearLocationCacheCommand::class,
             ]);
     }
 
@@ -29,16 +31,10 @@ class Provider extends PackageServiceProvider
         $this->app->singleton(LocationService::class, fn(Application $app) => new LocationService($app));
     }
 
-    public function packageRegistered()
+    private function getServiceClassesFromLocation($location): Collection
     {
-        $service = app(LocationService::class);
-        $service->registerBasePath($this->package->basePath);
-
-        foreach ($service->getLocations() as $location) {
-            if (!file_exists($location['service_path'])) {
-                continue;
-            }
-
+        return Cache::remember(Constants::CLASS_LIST . $location['name'], 60 * 60 * 24, function () use ($location) {
+            $classes = collect();
             foreach (Finder::create()->in($location['service_path'])->files() as $file) {
                 $class = str_replace(
                     ['/', '.php'],
@@ -50,8 +46,25 @@ class Provider extends PackageServiceProvider
                 }
 
                 $fullClass = $location['service_namespace'] . "\\" . $class;
+                $classes->push($fullClass);
+            }
+            return $classes;
+        });
+    }
 
-                $this->app->singletonIf($fullClass, fn() => new $fullClass);
+    public function bootingPackage()
+    {
+        $service = app(LocationService::class);
+        $service->registerBasePath($this->package->basePath);
+
+        foreach ($service->getLocations() as $location) {
+            if (!file_exists($location['service_path'])) {
+                continue;
+            }
+
+            $classes = $this->getServiceClassesFromLocation($location);
+            foreach ($classes as $class) {
+                $this->app->singletonIf($class, fn() => new $class);
             }
         }
     }
