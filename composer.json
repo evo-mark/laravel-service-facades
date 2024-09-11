@@ -1,0 +1,29 @@
+{
+    "name": "evo-mark/evo-laravel-service-facades",
+    "version": "1.0.0",
+    "description": "Support package for easily using the service/facade pattern",
+    "type": "package",
+    "license": "GNU GPLv3",
+    "authors": [
+        {
+            "name": "Craig Riley",
+            "email": "c.riley@evomark.co.uk"
+        }
+    ],
+    "require": {
+        "spatie/laravel-package-tools": "^1.16",
+        "laravel/prompts": "^0.1.25"
+    },
+    "autoload": {
+        "psr-4": {
+            "EvoMark\\EvoLaravelServiceFacades\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EvoMark\\EvoLaravelServiceFacades\\Provider"
+            ]
+        }
+    }
+}
