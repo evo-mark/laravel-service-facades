@@ -41,17 +41,17 @@ class AnnotateFacadesCommand extends Command implements Isolatable
         if ($noInteraction === true) {
             $selectedLocations = $locationOptions->keys();
         } else {
-            $selectedLocations = multiselect(
+            $selectedLocations = collect(multiselect(
                 label: 'Which locations should be included?',
                 options: $locationOptions->keys(),
                 default: $locationOptions->keys(),
-                hint: 'Deselect as required',
-                required: true
-            );
+                    hint: 'Deselect as required',
+                    required: true
+            ));
         }
 
         foreach ($service->getLocations() as $location) {
-            if (!file_exists($location['facade_path']) || !in_array($location['name'], $selectedLocations)) {
+            if (!file_exists($location['facade_path']) || $selectedLocations->contains($location['name']) === false) {
                 continue;
             }
 
