@@ -20,6 +20,14 @@ Create services with a backing facade in multiple pre-defined locations, then au
 
 Generate PHP Doc annotations for your facades to enable type-hinting in your IDE.
 
+## Installation
+
+```sh
+composer require evo-mark/evo-laravel-service-facades
+```
+
+## Usage
+
 ```php
 php artisan make:service
 php artisan facades:annotate
