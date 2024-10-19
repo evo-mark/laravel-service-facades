@@ -1,6 +1,5 @@
 {
     "name": "evo-mark/evo-laravel-service-facades",
-    "version": "1.0.0",
     "description": "Support package for easily using the service/facade pattern",
     "type": "package",
     "license": "GPL-3.0-or-later",
