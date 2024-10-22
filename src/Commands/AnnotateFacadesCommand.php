@@ -38,7 +38,7 @@ class AnnotateFacadesCommand extends Command implements Isolatable
         $service = app(LocationService::class);
         $locationOptions = $service->getLocationNames();
 
-        if ($noInteraction === true) {
+        if ($noInteraction === true || count($locationOptions->keys()) === 1) {
             $selectedLocations = $locationOptions->keys();
         } else {
             $selectedLocations = collect(multiselect(
@@ -50,12 +50,17 @@ class AnnotateFacadesCommand extends Command implements Isolatable
             ));
         }
 
+        
         foreach ($service->getLocations() as $location) {
             if (!file_exists($location['facade_path']) || $selectedLocations->contains($location['name']) === false) {
                 continue;
             }
-
+            
             $facadeFiles = glob(join_paths($location['facade_path'], '*.php'));
+            $progress = progress(label: 'Updating facade annotations for ' . $location['name'], steps: count($facadeFiles));
+            
+            $progress->start();
+
             foreach ($facadeFiles as $file) {
                 $facade = self::getClassFullNameFromFile($file);
                 $facadeBase = class_basename($facade);
@@ -87,17 +92,20 @@ class AnnotateFacadesCommand extends Command implements Isolatable
                     $newContents = preg_replace('/(\n{2})\n+/', "$1", $newContents);
                     if (! empty($facadeContents) && ! empty($newContents)) {
                         file_put_contents($file, $newContents);
-                        $this->info('Updated annotations for ' . $facadeBase);
                     } else {
                         $this->warn('Didn\'t update ' . $facadeBase . ' because there was an error');
                     }
                 } else {
                     $this->warn('Failed to match insertion point for ' . $facadeBase);
                 }
+
+                $progress->advance();
+
             }
+
+            $progress->finish();
         }
 
-        $this->info('Complete');
     }
 
     private function generateDocBlock(string $seeClassName, Collection $methods, string $className)
