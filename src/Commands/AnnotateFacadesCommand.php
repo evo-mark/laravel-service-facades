@@ -11,6 +11,7 @@ use Illuminate\Contracts\Console\Isolatable;
 use EvoMark\EvoLaravelServiceFacades\Services\LocationService;
 use function Illuminate\Filesystem\join_paths as join_paths;
 use function Laravel\Prompts\multiselect;
+use function Laravel\Prompts\progress;
 
 class AnnotateFacadesCommand extends Command implements Isolatable
 {
