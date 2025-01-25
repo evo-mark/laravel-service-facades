@@ -35,14 +35,8 @@ class MakeFacadeCommand extends GeneratorCommand implements PromptsForMissingInp
         return $this->selectedLocation['facade_namespace'];
     }
 
-    protected function replaceClass($stub, $name)
+    private function replaceClassEnd(string $class): string
     {
-        $class = str_replace($this->getNamespace($name) . '\\', '', $name);
-        $key = $this->argument('class');
-
-        $stub = str_replace('{{service_class}}', $key, $stub);
-        $namespace = $this->selectedLocation['facade_namespace'];
-
         $replaceEnd = $this->selectedLocation['facade_class_replace_end'] ?? config('evo-service-facades.facade_class_replace_end');
 
         if (!empty($replaceEnd)) {
@@ -52,13 +46,25 @@ class MakeFacadeCommand extends GeneratorCommand implements PromptsForMissingInp
             }
         }
 
-        // Do string replacement
+        return $class;
+    }
+
+    protected function replaceClass($stub, $name)
+    {
+        $class = str_replace($this->getNamespace($name) . '\\', '', $name);
+        $class = $this->replaceClassEnd($class);
+        $key = $this->argument('class');
+
+        $stub = str_replace('{{service_class}}', $key, $stub);
+        $namespace = $this->selectedLocation['facade_namespace'];
+
         return str($stub)->replace('{{facade_name}}', $class)->replace('{{facade_namespace}}', $namespace);
     }
 
     protected function getPath($name)
     {
         $name = Str::replaceFirst($this->getDefaultNamespace(), '', $name);
+        $name = $this->replaceClassEnd($name);
         return join_paths($this->selectedLocation['facade_path'], str_replace('\\', '/', $name) . '.php');
     }
 
