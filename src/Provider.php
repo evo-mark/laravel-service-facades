@@ -64,7 +64,7 @@ class Provider extends PackageServiceProvider
 
             $classes = $this->getServiceClassesFromLocation($location);
             foreach ($classes as $class) {
-                $this->app->singletonIf($class, fn() => new $class);
+                $this->app->singletonIf($class, fn(Application $app) => $app->build($class));
             }
         }
     }

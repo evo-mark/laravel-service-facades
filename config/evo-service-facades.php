@@ -10,5 +10,6 @@ return [
             'facade_path' => app_path('Facades'),
             'exclude' => []
         ]
-    ]
+    ],
+    'facade_class_replace_end' => []
 ];

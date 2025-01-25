@@ -43,6 +43,15 @@ class MakeFacadeCommand extends GeneratorCommand implements PromptsForMissingInp
         $stub = str_replace('{{service_class}}', $key, $stub);
         $namespace = $this->selectedLocation['facade_namespace'];
 
+        $replaceEnd = $this->selectedLocation['facade_class_replace_end'] ?? config('evo-service-facades.facade_class_replace_end');
+
+        if (!empty($replaceEnd)) {
+            list($search, $replace) = $replaceEnd;
+            if (!empty($search)) {
+                $class = Str::replaceEnd($search, $replace, $class);
+            }
+        }
+
         // Do string replacement
         return str($stub)->replace('{{facade_name}}', $class)->replace('{{facade_namespace}}', $namespace);
     }
