@@ -43,7 +43,11 @@ To keep your annotations up-to-date, you should add the following to your applic
 
 By default, your app's Service and Facades folders will be used as the default "location". You can change this by publishing the package's config file.
 
-You can also add to the available locations during application boot by calling:
+```sh
+php artisan v:p --provider="EvoMark\EvoLaravelServiceFacades\Provider"
+```
+
+If you'd prefer, you can instead add to the available locations during application boot by calling:
 
 ```php
 use EvoMark\EvoLaravelServiceFacades\Facades\ServiceFacades;
