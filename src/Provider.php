@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Support\Facades\Cache;
 use Spatie\LaravelPackageTools\Package;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Contracts\Foundation\Application;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use EvoMark\EvoLaravelServiceFacades\Services\LocationService;
