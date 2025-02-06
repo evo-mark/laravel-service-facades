@@ -31,25 +31,38 @@ class Provider extends PackageServiceProvider
         $this->app->singleton(LocationService::class, fn(Application $app) => new LocationService($app));
     }
 
+    /**
+     * Check whether there's a valid cache store to use for classes
+     */
+    private function cacheIsInvalid(): bool
+    {
+        return config('cache.default') === 'database' && Schema::hasTable('cache') === false;
+    }
+
+    private function getCachedServiceClassesFromLocation($location): Collection
+    {
+        return $this->cacheIsInvalid() ? 
+            $this->getServiceClassesFromLocation($location) : 
+            Cache::remember(Constants::CLASS_LIST . $location['name'], 60 * 60 * 24, fn () => $this->getServiceClassesFromLocation($location));
+    }
+
     private function getServiceClassesFromLocation($location): Collection
     {
-        return Cache::remember(Constants::CLASS_LIST . $location['name'], 60 * 60 * 24, function () use ($location) {
-            $classes = collect();
-            foreach (Finder::create()->in($location['service_path'])->files() as $file) {
-                $class = str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    Str::after($file->getRealPath(), realpath($location['service_path']) . DIRECTORY_SEPARATOR)
-                );
-                if (isset($location['exclude']) && in_array($class, $location['exclude'])) {
-                    continue;
-                }
-
-                $fullClass = $location['service_namespace'] . "\\" . $class;
-                $classes->push($fullClass);
+        $classes = collect();
+        foreach (Finder::create()->in($location['service_path'])->files() as $file) {
+            $class = str_replace(
+                ['/', '.php'],
+                ['\\', ''],
+                Str::after($file->getRealPath(), realpath($location['service_path']) . DIRECTORY_SEPARATOR)
+            );
+            if (isset($location['exclude']) && in_array($class, $location['exclude'])) {
+                continue;
             }
-            return $classes;
-        });
+
+            $fullClass = $location['service_namespace'] . "\\" . $class;
+            $classes->push($fullClass);
+        }
+        return $classes;
     }
 
     public function bootingPackage()
@@ -62,7 +75,7 @@ class Provider extends PackageServiceProvider
                 continue;
             }
 
-            $classes = $this->getServiceClassesFromLocation($location);
+            $classes = $this->getCachedServiceClassesFromLocation($location);
             foreach ($classes as $class) {
                 $this->app->singletonIf($class, fn(Application $app) => $app->build($class));
             }
