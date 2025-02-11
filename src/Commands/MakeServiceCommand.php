@@ -32,6 +32,11 @@ class MakeServiceCommand extends GeneratorCommand implements PromptsForMissingIn
         return join_paths($basePath, 'stubs/service.php.stub');
     }
 
+    protected function rootNamespace()
+    {
+        return $this->selectedLocation['service_namespace'];
+    }
+
     protected function getDefaultNamespace($rootNamespace = "")
     {
         return $this->selectedLocation['service_namespace'];

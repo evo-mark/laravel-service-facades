@@ -30,6 +30,11 @@ class MakeFacadeCommand extends GeneratorCommand implements PromptsForMissingInp
         return join_paths($basePath, 'stubs/facade.php.stub');
     }
 
+    protected function rootNamespace()
+    {
+        return $this->selectedLocation['service_namespace'];
+    }
+
     protected function getDefaultNamespace($rootNamespace = "")
     {
         return $this->selectedLocation['facade_namespace'];
