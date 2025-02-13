@@ -2,16 +2,21 @@
 
 namespace EvoMark\EvoLaravelServiceFacades\Commands;
 
+use ReflectionType;
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionUnionType;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
+use ReflectionIntersectionType;
 use Illuminate\Support\Collection;
-use Illuminate\Contracts\Console\Isolatable;
-use EvoMark\EvoLaravelServiceFacades\Services\LocationService;
-use function Illuminate\Filesystem\join_paths as join_paths;
-use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\progress;
+use function Laravel\Prompts\multiselect;
+use Illuminate\Contracts\Console\Isolatable;
+use function Illuminate\Filesystem\join_paths as join_paths;
+use EvoMark\EvoLaravelServiceFacades\Services\LocationService;
 
 class AnnotateFacadesCommand extends Command implements Isolatable
 {
@@ -46,20 +51,20 @@ class AnnotateFacadesCommand extends Command implements Isolatable
                 label: 'Which locations should be included?',
                 options: $locationOptions->keys(),
                 default: $locationOptions->keys(),
-                    hint: 'Deselect as required',
-                    required: true
+                hint: 'Deselect as required',
+                required: true
             ));
         }
 
-        
+
         foreach ($service->getLocations() as $location) {
             if (!file_exists($location['facade_path']) || $selectedLocations->contains($location['name']) === false) {
                 continue;
             }
-            
+
             $facadeFiles = glob(join_paths($location['facade_path'], '*.php'));
             $progress = progress(label: 'Updating facade annotations for ' . $location['name'], steps: count($facadeFiles));
-            
+
             $progress->start();
 
             foreach ($facadeFiles as $file) {
@@ -71,13 +76,15 @@ class AnnotateFacadesCommand extends Command implements Isolatable
 
                 $serviceMethods = collect($serviceReflection->getMethods())
                     ->filter(fn($method) => ! Str::startsWith($method->getName(), '__'))
-                    ->map(function ($method) {
+                    ->map(function (ReflectionMethod $method) {
                         $name = $method->getName();
                         $params = [];
                         foreach ($method->getParameters() as $param) {
                             $params[] = $param->getType() . ' $' . $param->getName();
                         }
-                        $returns = $method->getReturnType()?->getName();
+
+                        $returnType = $method->getReturnType();
+                        $returns = $this->resolveReturnType($returnType);
 
                         return [
                             'name' => $name,
@@ -101,12 +108,34 @@ class AnnotateFacadesCommand extends Command implements Isolatable
                 }
 
                 $progress->advance();
-
             }
 
             $progress->finish();
         }
+    }
 
+    /**
+     * Extract the return type string from the Type object
+     */
+    private function resolveReturnType(?ReflectionType $returnType): string
+    {
+        if (empty($returnType)) return "void";
+        else if ($returnType instanceof ReflectionUnionType) {
+            return collect($returnType)
+                ->map(fn($type) => $type?->getName() ?? "")
+                ->filter()
+                ->join("|");
+        } else if ($returnType instanceof ReflectionIntersectionType) {
+            $types = $returnType->getTypes();
+            collect($types)->reduce(function ($acc, $curr) {
+                $acc[] = $this->resolveReturnType($curr);
+                return $acc;
+            }, [])->filter()->join("|");
+        } else if ($returnType instanceof ReflectionNamedType) {
+            return $returnType->getName();
+        } else {
+            return "mixed";
+        }
     }
 
     private function generateDocBlock(string $seeClassName, Collection $methods, string $className)
