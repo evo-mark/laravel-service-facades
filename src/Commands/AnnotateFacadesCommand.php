@@ -120,8 +120,9 @@ class AnnotateFacadesCommand extends Command implements Isolatable
     private function resolveReturnType(?ReflectionType $returnType): string
     {
         if (empty($returnType)) return "void";
+        else if (is_string($returnType)) return $returnType;
         else if ($returnType instanceof ReflectionUnionType) {
-            return collect($returnType)
+            return collect($returnType->getTypes())
                 ->map(fn($type) => $type?->getName() ?? "")
                 ->filter()
                 ->join("|");
