@@ -32,7 +32,7 @@ class MakeFacadeCommand extends GeneratorCommand implements PromptsForMissingInp
 
     protected function rootNamespace()
     {
-        return $this->selectedLocation['service_namespace'];
+        return $this->selectedLocation['facade_namespace'];
     }
 
     protected function getDefaultNamespace($rootNamespace = "")
