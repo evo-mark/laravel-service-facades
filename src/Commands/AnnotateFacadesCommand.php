@@ -80,7 +80,30 @@ class AnnotateFacadesCommand extends Command implements Isolatable
                         $name = $method->getName();
                         $params = [];
                         foreach ($method->getParameters() as $param) {
-                            $params[] = $param->getType() . ' $' . $param->getName();
+                            $type = $param->getType();
+                            $typeString = $type ? $this->resolveParamType($type) . ' ' : '';
+                            $paramString = $typeString . '$' . $param->getName();
+
+                            // Add default value if available
+                            if ($param->isDefaultValueAvailable()) {
+                                if ($param->isDefaultValueConstant()) {
+                                    $default = $param->getDefaultValueConstantName();
+                                } else {
+                                    $defaultValue = $param->getDefaultValue();
+
+                                    $default = match (true) {
+                                        is_null($defaultValue) => 'null',
+                                        is_bool($defaultValue) => $defaultValue ? 'true' : 'false',
+                                        is_string($defaultValue) => "'" . addslashes($defaultValue) . "'",
+                                        is_array($defaultValue) => '[]',
+                                        default => $defaultValue,
+                                    };
+                                }
+
+                                $paramString .= ' = ' . $default;
+                            }
+
+                            $params[] = $paramString;
                         }
 
                         $returnType = $method->getReturnType();
@@ -112,6 +135,26 @@ class AnnotateFacadesCommand extends Command implements Isolatable
 
             $progress->finish();
         }
+    }
+
+    /**
+     * Resolve the param type and prepend `?` if it allows null
+     */
+    protected function resolveParamType(?ReflectionType $type): string
+    {
+        if (! $type) {
+            return '';
+        }
+
+        $name = $type instanceof ReflectionNamedType
+            ? $type->getName()
+            : (string) $type;
+
+        if ($type->allowsNull() && $name !== 'mixed') {
+            return '?' . $name;
+        }
+
+        return $name;
     }
 
     /**
